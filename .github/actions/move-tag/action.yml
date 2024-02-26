@@ -1,0 +1,68 @@
+name: Move major tag
+description: Creates or moves the major tag corresponding to a SemVer tag
+inputs:
+  tag:
+    description: SemVer-format tag
+    required: false
+    default: '${{ github.ref_name }}'
+  fail-on-error:
+    description: Should the action cause the workflow to fail?
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install SemVer
+      shell: bash
+      run: npm i semver
+
+    - name: Update major tag
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const semverParse = require('semver/functions/parse')
+          tag = semverParse('${{ inputs.tag }}')
+          console.log(JSON.stringify(tag, undefined, 2))
+          
+          if(!tag){
+            throw `'${{ inputs.tag }}' doesn't seem to be a valid SemVer version`
+          }
+
+          if(tag?.prerelease?.length){
+            if(${{ inputs.fail-on-error }}) {
+              throw "Tag appears to be a prerelease, skipping major tag move"
+            }
+            core.error("Tag appears to be a prerelease, skipping major tag move")
+            return;
+          }
+          
+          majorVersion = tag.major
+          
+          core.info(`Attempting to update ref 'tags/v${majorVersion}'`)
+          try{
+            await github.rest.git.updateRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `tags/v${majorVersion}`,
+              sha: context.sha
+            })
+            core.notice(`Updated tag 'v${majorVersion}': ${{github.server_url}}/${{github.repository}}/tree/v${majorVersion}`)
+          }catch(e){
+            if(e.status != 422){
+              core.error(e);
+            }
+            core.info(`Unable to update ref, got status ${e.status}, creating ref 'tags/v${majorVersion}'`)
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/v${majorVersion}`,
+              sha: context.sha
+            })
+            core.notice(`Created tag 'v${majorVersion}': ${{github.server_url}}/${{github.repository}}/tree/v${majorVersion}`)
+          }

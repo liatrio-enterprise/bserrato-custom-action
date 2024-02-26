@@ -1,0 +1,51 @@
+---
+name: "Create Release"
+
+on:
+  workflow_run:
+    workflows: [Test]
+    branches: [main]
+    types:
+      - completed
+
+jobs:
+  create-release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    name: Create Release
+    permissions:
+      contents: write
+    outputs:
+      new-release-version: ${{ steps.next-version.outputs.tag }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup semantic-release
+        run: |
+          npm i @semantic-release/changelog \
+            @semantic-release/git \
+            semantic-release-export-data
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Calculate next version
+        id: next-version
+        run: npx semantic-release --dry-run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release
+        if: steps.next-version.outputs.new-release-published == 'true'
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Move major tag
+        if: steps.next-version.outputs.new-release-published == 'true'
+        uses: liatrio/github-actions-template/.github/actions/move-tag@main
+        with:
+          tag: ${{ steps.next-version.outputs.new-release-version }}
