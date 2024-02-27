@@ -1,6 +1,6 @@
 ---
-name: 'github-actions-template'
-description: 'Template for creating new GitHub Actions'
+name: 'terraform-validation'
+description: 'Custom action for terraform validation'
 inputs:
   terraform_version:
     description: Terraform version to use for running terraform commands
