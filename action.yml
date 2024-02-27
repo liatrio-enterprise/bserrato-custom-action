@@ -2,16 +2,23 @@
 name: 'github-actions-template'
 description: 'Template for creating new GitHub Actions'
 inputs:
-  target:
-    description: Who you would like to say hello to
+  terraform_version:
+    description: Terraform version to use for running terraform commands
     required: false
     default: world
 runs:
   using: composite
   steps:
-    - name: configure AWS creds
-      uses: aws-actions/configure-aws-credentials@v4
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
       with:
-        role-to-assume: ${{ vars.AWS_IAM_ROLE }}
-        role-session-name: github-actions
-        aws-region: ${{ vars.AWS_REGION }}
+        terraform_version: ${{ inputs.terraform_version }}
+
+    - name: Validation
+      shell: bash
+      run: |
+        terraform init
+        terraform validate
+        terraform fmt -check
+
+  
