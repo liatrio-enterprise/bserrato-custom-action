@@ -13,8 +13,18 @@ runs:
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: ${{ inputs.terraform_version }}
+    
+    - name: Setup Tflint
+      shell: bash
+      uses: terraform-linters/setup-tflint@v4
+      with:
+        tflint_version: latest
 
-    - name: Validation
+    - name: Tflint Validation
+      shell: bash
+      run: tflint
+
+    - name: Terraform Validation
       shell: bash
       run: |
         terraform init
