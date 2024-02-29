@@ -38,4 +38,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: ./
+      - name: Valdation
+        uses: ./terraform-validation 
+        with:
+          terraform_version: 1.7.4
+

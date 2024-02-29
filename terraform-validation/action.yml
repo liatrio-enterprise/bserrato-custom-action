@@ -1,0 +1,24 @@
+---
+name: 'terraform-validation'
+description: 'Custom action for terraform validation'
+inputs:
+  terraform_version:
+    description: Terraform version to use for running terraform commands
+    required: false
+    default: world
+runs:
+  using: composite
+  steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ inputs.terraform_version }}
+
+    - name: Terraform Validation
+      shell: bash
+      run: |
+        terraform init
+        terraform validate
+        terraform fmt -check
+
+  
