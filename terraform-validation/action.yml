@@ -15,14 +15,13 @@ runs:
         terraform_version: ${{ inputs.terraform_version }}
     
     - name: Setup Tflint
-      shell: bash
       uses: terraform-linters/setup-tflint@v4
       with:
         tflint_version: latest
 
     - name: Tflint Validation
       shell: bash
-      run: tflint
+      run: tflin
 
     - name: Terraform Validation
       shell: bash
